@@ -4,13 +4,15 @@ from smtplib import SMTPHeloError, SMTPAuthenticationError
 from email.mime.text import MIMEText
 from email.utils import formataddr
 from logger import logging
+import akismet
 
 config = {}
 query = None
 server = None
 user = None
+akismet_enabled = False
 
-async def check_new_comments():
+async def check_new_comments() -> list:
     query.not_equal_to('isNotified', True)
     unnotified_list = query.find()
     await logging('检查新评论，查询到 %d 个新评论。' % len(unnotified_list), prnt = True)
@@ -34,7 +36,7 @@ def login_to_smtp() -> str:
         return "用户名或密码错误，无法登陆 SMTP 服务器"
     return ''
 
-def send_email(content, frm, to, subject, sender_name, receiver_name = ''):
+def send_email(content: str, frm: str, to: list, subject: str, sender_name: str, receiver_name: str = '') -> bool:
     msg = MIMEText(content, 'html', 'utf-8')
     msg['Subject'] = subject
     msg['From'] = formataddr([sender_name, frm])
@@ -45,7 +47,7 @@ def send_email(content, frm, to, subject, sender_name, receiver_name = ''):
     except:
         return False
 
-def send_replay_email(comment):
+def send_replay_email(comment) -> bool:
     parent_comment = query.get(comment.get('rid'))
     if(parent_comment.get('email') == None):
         return True
@@ -63,7 +65,7 @@ def send_replay_email(comment):
     return send_email(mail_template, config['smtp_mail'], comment.get['mail'], subject, config['sender_name'], comment.get('nick'))
 
 
-def send_admin_email(comment):
+def send_admin_email(comment) -> bool:
     mail_template = config['mail_template_admin']
     mail_template = mail_template.replace(r'${SITE_NAME}', config['site_name'])
     mail_template = mail_template.replace(r'${SITE_URL}', config['site_url'])
@@ -75,6 +77,17 @@ def send_admin_email(comment):
 
 async def send_emails(lst):
     for c in lst:
+        if akismet_enabled:
+            await logging('正在通过 akismet 验证垃圾评论: %s' % c.get('comment'))
+            if not akismet.check(config['site_url'], c.get('ip'), c.get('ua'), config['site_url'] + c.get('url'), c.get('comment'), c.get('nick'), c.get('mail'), c.get('link')):
+                await logging('检测到垃圾评论，跳过发送邮件')
+                acl = lc.ACL()
+                acl.set_public_read_access(False)
+                c.set_acl(acl)
+                c.set('isSpam', True)
+                c.save()
+                continue
+
         await logging('正在发送邮件： objectId = %s' % c.id)
         if c.get('rid') == None:
             # notify the blogger
@@ -97,10 +110,16 @@ def load_config():
         config = json.loads(f.read())
 
 async def init():
-    global query, user
+    global query, user, akismet_enabled
     await logging('加载配置文件...', prnt = True)
     load_config()
     lc.init(config['app_id'], master_key=config['master_key'])
+    if config['akismet_key'] != '':
+        await logging('验证 akismet key...', prnt = True)
+        if not akismet.init(config['akismet_key'], config['site_url']):
+            await logging('akismet key 验证失败，请检查你的 akismet key', level='error', prnt = True)
+            exit(1)
+        akismet_enabled = True
     query = lc.Query('Comment')
 
 async def main():
