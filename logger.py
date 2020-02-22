@@ -19,7 +19,7 @@ async def logging(msg, level='info', prnt = False):
     fname = 'valine-checker-%s.log' % datetime.now().strftime('%Y-%m-%d')
     if log_file == None or log_file.name != fname:
         init()
-    log = '[%s][%s]\t%s\n' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), level.upper(), msg)
-    log_file.write(log)
+    log = '[%s][%s]\t%s' % (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), level.upper(), msg)
+    log_file.write(log + '\n')
     if prnt:
         print(colour_sign[level.lower()] + log + colour_sign['info'])
