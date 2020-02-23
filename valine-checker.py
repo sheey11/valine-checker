@@ -114,7 +114,7 @@ async def init():
     await logging('加载配置文件...', prnt = True)
     load_config()
     lc.init(config['app_id'], master_key=config['master_key'])
-    if config['akismet_key'] != '':
+    if 'akismet_key' in config and config['akismet_key'] != '':
         await logging('验证 akismet key...', prnt = True)
         if not akismet.init(config['akismet_key'], config['site_url']):
             await logging('akismet key 验证失败，请检查你的 akismet key', level='error', prnt = True)
