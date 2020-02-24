@@ -14,6 +14,7 @@ akismet_enabled = False
 
 async def check_new_comments() -> list:
     query.not_equal_to('isNotified', True)
+    query.not_equal_to('isSpam', True)
     unnotified_list = query.find()
     await logging('检查新评论，查询到 %d 个新评论。' % len(unnotified_list), prnt = True)
     return unnotified_list
