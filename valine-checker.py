@@ -98,13 +98,14 @@ async def send_emails(lst):
                 c.set('isSpam', True)
                 c.save()
                 continue
-        await logging('正在发送邮件： objectId = %s' % c.id)
         if c.get('rid') == None:
             # notify the blogger
             func = send_admin_email
+            await logging('正在通知博主： objectId = %s' % c.id)
         else:
             # notify the author of the comment be replied
             func = send_replay_email
+            await logging('正在通知被回复者： objectId = %s' % c.id)
         if func(c):
             await logging('邮件发送成功！')
             c.set('isNotified', True)
