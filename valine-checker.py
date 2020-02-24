@@ -75,11 +75,21 @@ def send_admin_email(comment) -> bool:
     subject = config['site_name'] + '上有新评论了'
     return send_email(mail_template, config['smtp_mail'], config['blogger_mail'], subject, config['site_name'])
 
+async def prepare_smtp_server():
+    await logging('正在登陆 SMTP 服务器...', prnt = True)
+    m = login_to_smtp()
+    if m != '':
+        await logging(m, level = 'error', prnt = True)
+        exit(1)
+
 async def send_emails(lst):
+    if len(lst) == 0:
+        return
+    await prepare_smtp_server()
     for c in lst:
         if akismet_enabled:
             await logging('正在通过 akismet 验证垃圾评论: %s' % c.get('comment'))
-            if not akismet.check(config['site_url'], c.get('ip'), c.get('ua'), config['site_url'] + c.get('url'), c.get('comment'), c.get('nick'), c.get('mail'), c.get('link')):
+            if akismet.check(config['site_url'], c.get('ip'), c.get('ua'), config['site_url'] + c.get('url'), c.get('comment'), c.get('nick'), c.get('mail'), c.get('link')):
                 await logging('检测到垃圾评论，跳过发送邮件')
                 acl = lc.ACL()
                 acl.set_public_read_access(False)
@@ -87,7 +97,6 @@ async def send_emails(lst):
                 c.set('isSpam', True)
                 c.save()
                 continue
-
         await logging('正在发送邮件： objectId = %s' % c.id)
         if c.get('rid') == None:
             # notify the blogger
@@ -102,7 +111,8 @@ async def send_emails(lst):
         else:
             await logging('邮件发送失败！', level = 'error', prnt = True)
             exit(1)
-
+    await logging('登出 SMTP 服务器...', prnt = True)
+    server.quit()
 
 def load_config():
     global config
@@ -125,11 +135,6 @@ async def init():
 async def main():
     await logging('Valine-Cheker 开始初始化。', prnt = True)
     await init()
-    await logging('正在登陆 SMTP 服务器...', prnt = True)
-    m = login_to_smtp()
-    if m != '':
-        await logging(m, level = 'error', prnt = True)
-        exit(1)
     while True:
         lst = await check_new_comments()
         await send_emails(lst)
