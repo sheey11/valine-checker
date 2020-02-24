@@ -49,7 +49,7 @@ def send_email(content: str, frm: str, to: list, subject: str, sender_name: str,
         return False
 
 def send_replay_email(comment) -> bool:
-    parent_comment = query.get(comment.get('rid'))
+    parent_comment = query.get(comment.get('pid'))
     if(parent_comment.get('email') == None):
         return True
     mail_template = config['mail_template']
@@ -98,7 +98,7 @@ async def send_emails(lst):
                 c.set('isSpam', True)
                 c.save()
                 continue
-        if c.get('rid') == None:
+        if c.get('pid') == None:
             # notify the blogger
             func = send_admin_email
             await logging('正在通知博主： objectId = %s' % c.id)
