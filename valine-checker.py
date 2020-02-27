@@ -1,5 +1,5 @@
 import leancloud as lc
-import json, time, threading, smtplib, asyncio
+import json, time, threading, smtplib, asyncio, traceback
 from smtplib import SMTPHeloError, SMTPAuthenticationError
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -135,13 +135,18 @@ async def init():
     query = lc.Query('Comment')
 
 async def main():
-    await logging('Valine-Cheker 开始初始化。', prnt = True)
-    await init()
-    while True:
-        lst = await check_new_comments()
-        await send_emails(lst)
-        await logging('等待 %d 秒...' % config['interval'])
-        await asyncio.sleep(config['interval'])
+    try:
+        await logging('Valine-Cheker 开始初始化。', prnt = True)
+        await init()
+        while True:
+            lst = await check_new_comments()
+            await send_emails(lst)
+            await logging('等待 %d 秒...' % config['interval'])
+            await asyncio.sleep(config['interval'])
+    except Exception as e:
+        await logger('Error encountered:',level = 'error', prnt = True)
+        for line in traceback.format_exc().split('\n'):
+            await logger(line,level = 'error', prnt = True)
 
 if __name__ == '__main__':
     asyncio.run(main())
