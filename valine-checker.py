@@ -144,9 +144,9 @@ async def main():
             await logging('等待 %d 秒...' % config['interval'])
             await asyncio.sleep(config['interval'])
     except Exception as e:
-        await logger('Error encountered:',level = 'error', prnt = True)
+        await logging('Error encountered:',level = 'error', prnt = True)
         for line in traceback.format_exc().split('\n'):
-            await logger(line,level = 'error', prnt = True)
+            await logging(line,level = 'error', prnt = True)
 
 if __name__ == '__main__':
     asyncio.run(main())
