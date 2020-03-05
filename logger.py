@@ -15,7 +15,7 @@ def init():
     fname = './logs/valine-checker-%s.log' % datetime.now().strftime('%Y-%m-%d')
     log_file = open(fname, 'a+')
 
-async def logging(msg, level='info', prnt = False):
+def logging(msg, level='info', prnt = False):
     fname = 'valine-checker-%s.log' % datetime.now().strftime('%Y-%m-%d')
     if log_file == None or log_file.name != fname:
         init()

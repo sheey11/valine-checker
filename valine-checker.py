@@ -1,5 +1,5 @@
 import leancloud as lc
-import json, time, threading, smtplib, asyncio, traceback
+import json, time, threading, smtplib, asyncio, traceback, threading
 from smtplib import SMTPHeloError, SMTPAuthenticationError
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -11,12 +11,13 @@ query = None
 server = None
 user = None
 akismet_enabled = False
+timer = None
 
-async def check_new_comments() -> list:
+def check_new_comments() -> list:
     query.not_equal_to('isNotified', True)
     query.not_equal_to('isSpam', True)
     unnotified_list = query.find()
-    await logging('检查新评论，查询到 %d 个新评论。' % len(unnotified_list), prnt = True)
+    logging('检查新评论，查询到 %d 个新评论。' % len(unnotified_list), prnt = True)
     return unnotified_list
 
 def login_to_smtp() -> str:
@@ -76,22 +77,22 @@ def send_admin_email(comment) -> bool:
     subject = config['site_name'] + '上有新评论了'
     return send_email(mail_template, config['smtp_mail'], config['blogger_mail'], subject, config['site_name'])
 
-async def prepare_smtp_server():
-    await logging('正在登陆 SMTP 服务器...', prnt = True)
+def prepare_smtp_server():
+    logging('正在登陆 SMTP 服务器...', prnt = True)
     m = login_to_smtp()
     if m != '':
-        await logging(m, level = 'error', prnt = True)
+        logging(m, level = 'error', prnt = True)
         exit(1)
 
-async def send_emails(lst):
+def send_emails(lst):
     if len(lst) == 0:
         return
-    await prepare_smtp_server()
+    prepare_smtp_server()
     for c in lst:
         if akismet_enabled:
-            await logging('正在通过 akismet 验证垃圾评论: %s' % c.get('comment'))
+            logging('正在通过 akismet 验证垃圾评论: %s' % c.get('comment'))
             if akismet.check(config['site_url'], c.get('ip'), c.get('ua'), config['site_url'] + c.get('url'), c.get('comment'), c.get('nick'), c.get('mail'), c.get('link')):
-                await logging('检测到垃圾评论，跳过发送邮件')
+                logging('检测到垃圾评论，跳过发送邮件')
                 acl = lc.ACL()
                 acl.set_public_read_access(False)
                 c.set_acl(acl)
@@ -101,19 +102,19 @@ async def send_emails(lst):
         if c.get('pid') == None:
             # notify the blogger
             func = send_admin_email
-            await logging('正在通知博主： objectId = %s' % c.id)
+            logging('正在通知博主： objectId = %s' % c.id)
         else:
             # notify the author of the comment be replied
             func = send_replay_email
-            await logging('正在通知被回复者： objectId = %s' % c.id)
+            logging('正在通知被回复者： objectId = %s' % c.id)
         if func(c):
-            await logging('邮件发送成功！')
+            logging('邮件发送成功！')
             c.set('isNotified', True)
             c.save()
         else:
-            await logging('邮件发送失败！', level = 'error', prnt = True)
+            logging('邮件发送失败！', level = 'error', prnt = True)
             exit(1)
-    await logging('登出 SMTP 服务器...', prnt = True)
+    logging('登出 SMTP 服务器...', prnt = True)
     server.quit()
 
 def load_config():
@@ -121,32 +122,38 @@ def load_config():
     with open('config.json', 'r') as f:
         config = json.loads(f.read())
 
-async def init():
+def init():
     global query, user, akismet_enabled
-    await logging('加载配置文件...', prnt = True)
+    logging('加载配置文件...', prnt = True)
     load_config()
     lc.init(config['app_id'], master_key=config['master_key'])
     if 'akismet_key' in config and config['akismet_key'] != '':
-        await logging('验证 akismet key...', prnt = True)
+        logging('验证 akismet key...', prnt = True)
         if not akismet.init(config['akismet_key'], config['site_url']):
-            await logging('akismet key 验证失败，请检查你的 akismet key', level='error', prnt = True)
+            logging('akismet key 验证失败，请检查你的 akismet key', level='error', prnt = True)
             exit(1)
         akismet_enabled = True
     query = lc.Query('Comment')
 
-async def main():
+def check():
     try:
-        await logging('Valine-Cheker 开始初始化。', prnt = True)
-        await init()
-        while True:
-            lst = await check_new_comments()
-            await send_emails(lst)
-            await logging('等待 %d 秒...' % config['interval'])
-            await asyncio.sleep(config['interval'])
+        lst = check_new_comments()
+        send_emails(lst)
+        logging('等待 %d 秒...' % config['interval'])
     except Exception as e:
-        await logging('Error encountered:',level = 'error', prnt = True)
+        logging('Error encountered:',level = 'error', prnt = True)
         for line in traceback.format_exc().split('\n'):
-            await logging(line,level = 'error', prnt = True)
+            logging(line,level = 'error', prnt = True)
+        logging('重新登录 leancloud...', prnt = True)
+        init()
+
+async def main():
+    global timer
+    logging('Valine-Cheker 开始初始化。', prnt = True)
+    init()
+    while True:
+        check()
+        await asyncio.sleep(config['interval'])
 
 if __name__ == '__main__':
     asyncio.run(main())
