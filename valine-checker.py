@@ -90,7 +90,7 @@ def send_emails(lst):
     prepare_smtp_server()
     for c in lst:
         if akismet_enabled:
-            logging('正在通过 akismet 验证垃圾评论: %s' % c.get('comment'))
+            logging('正在通过 akismet 验证垃圾评论: %s' % c.get('comment')[:-1]) # 最后一个字符是 \n
             if akismet.check(config['site_url'], c.get('ip'), c.get('ua'), config['site_url'] + c.get('url'), c.get('comment'), c.get('nick'), c.get('mail'), c.get('link')):
                 logging('检测到垃圾评论，跳过发送邮件')
                 acl = lc.ACL()
