@@ -143,12 +143,11 @@ def check():
     except Exception as e:
         logging('Error encountered:',level = 'error', prnt = True)
         for line in traceback.format_exc().split('\n'):
-            logging(line,level = 'error', prnt = True)
+            logging(line, level = 'error', prnt = True)
         logging('重新登录 leancloud...', prnt = True)
         init()
 
 async def main():
-    global timer
     logging('Valine-Cheker 开始初始化。', prnt = True)
     init()
     while True:
