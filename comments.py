@@ -14,6 +14,7 @@ def init():
     load_config()
     lc.init(config['app_id'], master_key=config['master_key'])
     query = lc.Query('Comment')
+    query.descending('createdAt')
 
 def main():
     init()
@@ -30,6 +31,8 @@ def main():
         c['isSpam'] = spam
         c['url'] = config['site_url'] + comment.get('url') + '#' + comment.id
         c['id'] = comment.id
+        c['comment'] = comment.get('comment')
+        c['authorUrl'] = comment.get('link')
         data["comments"].append(c)
     print(json.dumps(data))
 
