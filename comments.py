@@ -6,7 +6,7 @@ query = None
 
 def load_config():
     global config
-    with open('server/checker/config.json', 'r') as f:
+    with open('checker/config.json', 'r') as f:
         config = json.loads(f.read())
 
 def init():
@@ -19,7 +19,11 @@ def init():
 def main():
     init()
     comments = query.find()
-    data = {"site_name": config['site_name'] ,"comments" : []}
+    data = {
+        'code': 200,
+        'site_name': config['site_name'],
+        'comments' : []
+    }
     for comment in comments:
         c = {}
         c['sender'] = comment.get('nick')
