@@ -1,17 +1,18 @@
 import leancloud as lc
 import json, sys
+from checker.config import load_config
 
 config = {}
 query = None
 
-def load_config():
-    global config
-    with open('server/checker/config.json', 'r') as f:
-        config = json.loads(f.read())
+# def load_config():
+#     global config
+#     with open('server/checker/config.json', 'r') as f:
+#         config = json.loads(f.read())
 
 def init():
-    global query
-    load_config()
+    global query, config
+    config = load_config()
     lc.init(config['app_id'], master_key=config['master_key'])
     query = lc.Query('Comment')
 

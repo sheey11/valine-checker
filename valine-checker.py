@@ -3,8 +3,9 @@ import json, time, threading, smtplib, asyncio, traceback, threading
 from smtplib import SMTPHeloError, SMTPAuthenticationError
 from email.mime.text import MIMEText
 from email.utils import formataddr
-from logger import logging
-import akismet
+from checker.logger import logging
+from checker.config import load_config
+import checker.akismet
 
 config = {}
 query = None
@@ -117,15 +118,15 @@ def send_emails(lst):
     logging('登出 SMTP 服务器...', prnt = True)
     server.quit()
 
-def load_config():
-    global config
-    with open('config.json', 'r') as f:
-        config = json.loads(f.read())
+# def load_config():
+#     global config
+#     with open('config.json', 'r') as f:
+#         config = json.loads(f.read())
 
 def init():
-    global query, user, akismet_enabled
+    global query, user, akismet_enabled, config
     logging('加载配置文件...', prnt = True)
-    load_config()
+    config = load_config()
     lc.init(config['app_id'], master_key=config['master_key'])
     if 'akismet_key' in config and config['akismet_key'] != '':
         logging('验证 akismet key...', prnt = True)
