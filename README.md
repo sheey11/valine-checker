@@ -1,6 +1,9 @@
 # valine checker
 轮询 Valine 的新评论并发送通知邮件。
 
+# 注意事项
+此版本专为 `heroku` 所优化，搭配 `valine-checker-admin` 使用，如果不需要使用 `valine-checker-admin` 请使用 `master` 分支的版本。
+
 # 使用方法
 1. 至少需要 `python` >= `3.7` 的版本。
 2. `pip3 install -r requirements.txt`
