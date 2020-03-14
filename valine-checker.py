@@ -3,9 +3,9 @@ import json, time, threading, smtplib, asyncio, traceback, threading
 from smtplib import SMTPHeloError, SMTPAuthenticationError
 from email.mime.text import MIMEText
 from email.utils import formataddr
-from checker.logger import logging
-from checker.config import load_config
-import checker.akismet
+from logger import logging
+from config import load_config
+import akismet
 
 config = {}
 query = None

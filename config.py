@@ -1,3 +1,5 @@
+import os
+
 CONFIG_VARIABLES = [
     'app_id',
     'master_key',
@@ -21,6 +23,6 @@ CONFIG_VARIABLES = [
 def load_config() -> dict:
     config = {}
     for variable in CONFIG_VARIABLES:
-        value = os.environ(variable.upper())
+        value = os.environ[variable.upper()]
         config[variable] = value
     return config

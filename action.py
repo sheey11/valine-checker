@@ -1,6 +1,6 @@
 import leancloud as lc
 import json, sys
-from checker.config import load_config
+from config import load_config
 
 config = {}
 query = None
