@@ -136,6 +136,7 @@ dmypy.json
 
 # config file
 config.json
+config.sh
 
 # macOS
 .DS_Store

@@ -25,4 +25,8 @@ def load_config() -> dict:
     for variable in CONFIG_VARIABLES:
         value = os.environ[variable.upper()]
         config[variable] = value
+    config['interval'] = int(config['interval'])
+    config['smtp_port'] = int(config['smtp_port'])
+    config['smtp_secure'] = True if config['smtp_secure'].lower() == 'true' else False
+    config['blogger_mail'] = config['blogger_mail'].replace(' ', '').split(',')
     return config
