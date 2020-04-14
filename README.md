@@ -1,5 +1,5 @@
 # valine checker
-轮询 Valine 的新评论并发送通知邮件。
+轮询 Valine 的新评论并发送通知邮件。建议~~配合~~直接用[Valine Checker Admin](https://github.com/Sheey11/valine-checker-admin)。
 
 # 使用方法
 1. 至少需要 `python` >= `3.7` 的版本。
