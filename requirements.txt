@@ -1,2 +1,2 @@
 leancloud==2.5.0
-Werkzeug==0.16.1
+Werkzeug==2.2.3
